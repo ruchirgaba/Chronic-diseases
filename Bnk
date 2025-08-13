@@ -1,0 +1,253 @@
+import java.util.*;
+import java.util.regex.*;
+
+// Custom exceptions
+class InvalidNameException extends Exception {
+    public InvalidNameException(String msg) {
+        super(msg);
+    }
+}
+
+class InvalidEmailException extends Exception {
+    public InvalidEmailException(String msg) {
+        super(msg);
+    }
+}
+
+class InvalidContactException extends Exception {
+    public InvalidContactException(String msg) {
+        super(msg);
+    }
+}
+
+class InvalidAccountTypeException extends Exception {
+    public InvalidAccountTypeException(String msg) {
+        super(msg);
+    }
+}
+
+class InvalidCustomerIdException extends Exception {
+    public InvalidCustomerIdException(String msg) {
+        super(msg);
+    }
+}
+
+// Customer class
+class Customer {
+    private int customerId;
+    private String name;
+    private String email;
+    private String contact;
+    private String accountType;
+
+    public Customer(int customerId, String name, String email, String contact, String accountType) {
+        this.customerId = customerId;
+        this.name = name;
+        this.email = email;
+        this.contact = contact;
+        this.accountType = accountType;
+    }
+
+    public int getCustomerId() {
+        return customerId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getContact() {
+        return contact;
+    }
+
+    public String getAccountType() {
+        return accountType;
+    }
+
+    @Override
+    public String toString() {
+        return "Customer Id = " + customerId +
+                ", Customer name = " + name +
+                ", Customer email = " + email +
+                ", Customer contact = " + contact +
+                ", Account type = " + accountType;
+    }
+}
+
+public class BankCustomerManagementSystem {
+    private static ArrayList<Customer> customers = new ArrayList<>();
+    private static int nextCustomerId = 1000; // will be updated after preload
+    private static Scanner sc = new Scanner(System.in);
+
+    // Validation methods
+    private static void validateName(String name) throws InvalidNameException {
+        if (!name.matches("[a-zA-Z ]+")) {
+            throw new InvalidNameException("Name can only have alphabets");
+        }
+    }
+
+    private static void validateEmail(String email) throws InvalidEmailException {
+        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        if (!Pattern.matches(regex, email)) {
+            throw new InvalidEmailException("Invalid email format");
+        }
+    }
+
+    private static void validateContact(String contact) throws InvalidContactException {
+        if (!contact.matches("\\d{10}")) {
+            throw new InvalidContactException("Contact number should have exactly 10 digits");
+        }
+    }
+
+    private static void validateAccountType(String accountType) throws InvalidAccountTypeException {
+        if (!(accountType.equalsIgnoreCase("Savings") || accountType.equalsIgnoreCase("Current"))) {
+            throw new InvalidAccountTypeException("Account type must be Savings or Current");
+        }
+    }
+
+    private static void validateCustomerIdInput(String input) throws InvalidCustomerIdException {
+        if (!input.matches("\\d+")) {
+            throw new InvalidCustomerIdException("Customer ID must be an integer");
+        }
+    }
+
+    // Generate sequential customer ID
+    private static int generateSequentialCustomerId() {
+        return nextCustomerId++;
+    }
+
+    // Menu options
+    private static void addCustomer() {
+        try {
+            System.out.print("Enter name: ");
+            String name = sc.nextLine();
+            validateName(name);
+
+            System.out.print("Enter email: ");
+            String email = sc.nextLine();
+            validateEmail(email);
+
+            System.out.print("Enter contact: ");
+            String contact = sc.nextLine();
+            validateContact(contact);
+
+            System.out.print("Enter account type (Savings or Current): ");
+            String accountType = sc.nextLine();
+            validateAccountType(accountType);
+
+            int customerId = generateSequentialCustomerId();
+            customers.add(new Customer(customerId, name, email, contact, accountType));
+            System.out.println("Customer added successfully with customer id " + customerId);
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void displayCustomers() {
+        if (customers.isEmpty()) {
+            System.out.println("No customers found.");
+        } else {
+            for (Customer c : customers) {
+                System.out.println(c);
+            }
+        }
+    }
+
+    private static void searchCustomer() {
+        try {
+            System.out.print("Please enter customer id: ");
+            String input = sc.nextLine();
+            validateCustomerIdInput(input);
+            int id = Integer.parseInt(input);
+
+            for (Customer c : customers) {
+                if (c.getCustomerId() == id) {
+                    System.out.println(c);
+                    return;
+                }
+            }
+            System.out.println("Customer not found.");
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void deleteCustomer() {
+        try {
+            System.out.print("Please enter customer id to be deleted: ");
+            String input = sc.nextLine();
+            validateCustomerIdInput(input);
+            int id = Integer.parseInt(input);
+
+            Iterator<Customer> iterator = customers.iterator();
+            while (iterator.hasNext()) {
+                Customer c = iterator.next();
+                if (c.getCustomerId() == id) {
+                    iterator.remove();
+                    System.out.println("Deleted customer with id = " + id);
+                    return;
+                }
+            }
+            System.out.println("Customer not found.");
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    // Preload sample customers
+    private static void preloadCustomers() {
+        customers.add(new Customer(7262, "Sandra", "Sandra@gmail.com", "9988778877", "Savings"));
+        customers.add(new Customer(1014, "Michelle", "Michelle@gmail.com", "9876543210", "Current"));
+        customers.add(new Customer(2680, "Steve", "Steve@gmail.com", "9123456780", "Savings"));
+
+        // Find max ID so new IDs start after it
+        for (Customer c : customers) {
+            if (c.getCustomerId() >= nextCustomerId) {
+                nextCustomerId = c.getCustomerId() + 1;
+            }
+        }
+    }
+
+    // Main method
+    public static void main(String[] args) {
+        preloadCustomers(); // load default customers
+
+        while (true) {
+            System.out.println("\nWelcome to Standard Chartered Bank");
+            System.out.println("Please enter your choice");
+            System.out.println("1 for Add new Customer");
+            System.out.println("2 for Display Customers");
+            System.out.println("3 for Search Customer");
+            System.out.println("4 for Delete Customer");
+            System.out.println("5 for Exit the bank application");
+
+            String choice = sc.nextLine();
+            switch (choice) {
+                case "1":
+                    addCustomer();
+                    break;
+                case "2":
+                    displayCustomers();
+                    break;
+                case "3":
+                    searchCustomer();
+                    break;
+                case "4":
+                    deleteCustomer();
+                    break;
+                case "5":
+                    System.out.println("Thank you for using the bank application!");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+}
